@@ -326,6 +326,7 @@ class ObjectSerializer
             }
             $instance = new $class();
             $reverseAttributes = array_flip($instance::attributeMap());
+            $data = is_array($data) ? (object)$data : $data;
             if (!is_object($data)) {
                 return null;
             }
@@ -339,7 +340,7 @@ class ObjectSerializer
                 if ($instance->additionalPropertiesType()) {
                   $instance->additionalPropertySetter($key, self::deserialize($propertyValue, $instance->additionalPropertiesType(), $httpHeaders));
                 } else {
-                  throw new \InvalidArgumentException("No additional properties allowed: " . $key);
+                  throw new \InvalidArgumentException('/' . $key . " no additional properties allowed");
                 }
               }
 
