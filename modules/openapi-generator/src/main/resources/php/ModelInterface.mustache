@@ -19,6 +19,28 @@
 
 namespace {{modelPackage}};
 
+class ValidationError {
+  private $message;
+  private $path;
+
+  public function __construct(string $message, array $path = []) {
+    $this->message = $message;
+    $this->path = $path;
+  }
+
+  private function pathString() {
+    return implode('', array_map(function($p) { return '/' . $p; }, $this->path));
+  }
+
+  public function __toString() {
+    return $this->pathString() . ' ' . $this->message;
+  }
+
+  public function path(string $path) {
+    return new ValidationError($this->message, array_merge([$path], $this->path));
+  }
+}
+
 /**
  * Interface abstracting model access.
  *
