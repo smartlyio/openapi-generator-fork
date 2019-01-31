@@ -148,6 +148,10 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
     protected $container = [];
     {{/parentSchema}}
 
+    public function values() {
+        return $this->container;
+    }
+
     /**
      * Constructor
      *
@@ -161,8 +165,12 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
 
         {{/parentSchema}}
         {{#vars}}
-        $this->container['{{name}}'] = isset($data['{{name}}']) ? $data['{{name}}'] : {{#defaultValue}}{{{defaultValue}}}{{/defaultValue}}{{^defaultValue}}null{{/defaultValue}};
-        {{/vars}}
+        if ($data && array_key_exists('{{name}}', $data)) {
+            $this->container['{{name}}'] = $data['{{name}}'];
+        }{{#defaultValue}} else {
+            $this->container['{{name}}'] = {{{defaultValue}}};
+        }{{/defaultValue}}
+	{{/vars}}
         {{#discriminator}}
 
         // Initialize discriminator property with the model name.

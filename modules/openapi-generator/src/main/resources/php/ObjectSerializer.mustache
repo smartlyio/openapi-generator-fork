@@ -55,9 +55,12 @@ class ObjectSerializer
             $values = [];
             if ($data instanceof ModelInterface) {
                 $formats = $data::openAPIFormats();
-                foreach ($data::openAPITypes() as $property => $openAPIType) {
+                foreach ($data->values() as $property => $value) {
                     $getter = $data::getters()[$property];
-                    $value = $data->$getter();
+                    if ($getter) {
+                        $value = $data->$getter();
+                    }
+                    $openAPIType = $data::openAPITypes()[$property]?: null;
                     if ($value !== null
                         && !in_array($openAPIType, [{{&primitives}}], true)
                         && method_exists($openAPIType, 'getAllowableEnumValues')
@@ -65,9 +68,7 @@ class ObjectSerializer
                         $imploded = implode("', '", $openAPIType::getAllowableEnumValues());
                         throw new \InvalidArgumentException("Invalid value for enum '$openAPIType', must be one of: '$imploded'");
                     }
-                    if ($value !== null) {
-                        $values[$data::attributeMap()[$property]] = self::sanitizeForSerialization($value, $openAPIType, $formats[$property]);
-                    }
+                    $values[$data::attributeMap()[$property]] = self::sanitizeForSerialization($value, $openAPIType, $formats[$property]);
                 }
             } else {
                 foreach($data as $property => $value) {
