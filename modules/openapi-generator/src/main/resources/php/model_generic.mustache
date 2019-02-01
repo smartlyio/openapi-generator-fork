@@ -162,7 +162,6 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
     {
         {{#parentSchema}}
         parent::__construct($data);
-
         {{/parentSchema}}
         {{#vars}}
         if ($data && array_key_exists('{{name}}', $data)) {
@@ -355,8 +354,8 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
      *
      * @return $this
      */
-    public function {{setter}}(${{name}}) {
-        $errors = $this->validate_{{name}}(${{name}});
+    public function {{setter}}(${{name}}, bool $validate = true) {
+        $errors = $validate ? $this->validate_{{name}}(${{name}}) : [];
         if (count($errors) > 0) {
             throw new \InvalidArgumentException(implode('\n', array_map(function($error) { return $error->path('{{name}}');}, $errors)));
         }
