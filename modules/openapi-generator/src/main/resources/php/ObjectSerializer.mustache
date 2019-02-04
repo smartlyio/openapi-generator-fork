@@ -332,21 +332,19 @@ class ObjectSerializer
                 return null;
             }
             if (!empty($instance::oneOf())) {
-                return self::deserialize($data, "oneOf[". implode(', ', $instance->onefOf())  ."]", $httpHeaders);
+                return self::deserialize($data, "oneOf[". implode(', ', $instance->oneOf())  ."]", $httpHeaders);
             }
             foreach(get_object_vars($data) as $key => $propertyValue) {
               $modelField = $reverseAttributes[$key];
               $propertySetter = $instance::setters()[$modelField];
-              if (!isset($propertySetter)) {
-                if ($instance->additionalPropertiesType()) {
-                  $instance->additionalPropertySetter($key, self::deserialize($propertyValue, $instance->additionalPropertiesType(), $httpHeaders));
-                } else {
+              if (isset($propertySetter)) {
+                $type = $instance::openAPITypes()[$modelField];
+                $instance->$propertySetter(self::deserialize($propertyValue, $type, $httpHeaders));
+              } elseif ($instance->additionalPropertiesType()) {
+                  $instance->additionalPropertiesSetter($key, self::deserialize($propertyValue, $instance->additionalPropertiesType(), $httpHeaders));
+              } else {
                   throw new \InvalidArgumentException('/' . $key . " no additional properties allowed");
-                }
               }
-
-              $type = $instance::openAPITypes()[$modelField];
-              $instance->$propertySetter(self::deserialize($propertyValue, $type, $httpHeaders));
             }
             return $instance;
         }
