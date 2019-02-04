@@ -229,7 +229,7 @@ class ObjectSerializer
         if (null === $data) {
             return null;
         } elseif (substr($class, 0, 4) === 'map[') { // for associative array e.g. map[string,int]
-            $data = is_string($data) ? json_decode($data) : $data;
+            $data = is_string($data) ? json_decode($data, true) : $data;
             settype($data, 'array');
             $inner = substr($class, 4, -1);
             $deserialized = [];
@@ -242,7 +242,7 @@ class ObjectSerializer
             }
             return $deserialized;
         } elseif (strcasecmp(substr($class, -2), '[]') === 0) {
-            $data = is_string($data) ? json_decode($data) : $data;
+            $data = is_string($data) ? json_decode($data, true) : $data;
             $subClass = substr($class, 0, -2);
             $values = [];
             if (!is_array($data)) {
@@ -289,7 +289,14 @@ class ObjectSerializer
                 return null;
             }
         } elseif (in_array($class, [{{&primitives}}], true)) {
-            settype($data, $class);
+            if (is_array($data) && $class !== 'object') {
+                throw new \InvalidArgumentException('invalid cast of array value to ' . $class);
+            }
+            try {
+                settype($data, $class);
+            } catch (\ErrorException $e) {
+                throw new \InvalidArgumentException('invalid cast: ' . $e->getMessage());
+            }
             return $data;
         } elseif ($class === '\SplFileObject') {
             /** @var \Psr\Http\Message\StreamInterface $data */
@@ -316,7 +323,8 @@ class ObjectSerializer
             }
             return $data;
         } else {
-            $data = is_string($data) ? json_decode($data) : $data;
+            $original_data = $data;
+            $data = is_string($data) ? json_decode($data, true) : $data;
             // If a discriminator is defined and points to a valid subclass, use it.
             $discriminator = $class::DISCRIMINATOR;
             if (!empty($discriminator) && isset($data->{$discriminator}) && is_string($data->{$discriminator})) {
@@ -326,13 +334,13 @@ class ObjectSerializer
                 }
             }
             $instance = new $class();
+            if (!empty($instance::oneOf())) {
+                return self::deserialize($original_data, "oneOf[". implode(', ', $instance->oneOf())  ."]", $httpHeaders);
+            }
             $reverseAttributes = array_flip($instance::attributeMap());
             $data = is_array($data) ? (object)$data : $data;
             if (!is_object($data)) {
                 return null;
-            }
-            if (!empty($instance::oneOf())) {
-                return self::deserialize($data, "oneOf[". implode(', ', $instance->oneOf())  ."]", $httpHeaders);
             }
             foreach(get_object_vars($data) as $key => $propertyValue) {
               $modelField = $reverseAttributes[$key];

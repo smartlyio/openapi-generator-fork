@@ -267,6 +267,9 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
                 return [new ValidationError('incorrect type' . get_class($data))];
             }
         }
+        if (is_array($data)) {
+            return [new ValidationError('incorrect type array')];
+        }
         return [];
     }
 
