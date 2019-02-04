@@ -262,6 +262,10 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
     }
 
     private static function errorsPlainType(string $type, $data): array {
+        // accept anything for 'object'
+        if ($type === 'object') {
+            return [];
+        }
         if (is_object($data)) {
             if ('\\' . get_class($data) !== $type) {
                 return [new ValidationError('incorrect type' . get_class($data))];
