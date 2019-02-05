@@ -354,6 +354,7 @@ class ObjectSerializer
                   throw new \InvalidArgumentException('/' . $key . " no additional properties allowed");
               }
             }
+            $instance->assertValid();
             return $instance;
         }
     }
