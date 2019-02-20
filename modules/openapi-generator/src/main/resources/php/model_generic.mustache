@@ -178,7 +178,7 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
     }
 
     public static function additionalPropertiesType() {
-        return {{#additionalPropertiesType}}{{additionalPropertiesType}}{{/additionalPropertiesType}}{{^additionalPropertiesType}}null{{/additionalPropertiesType}};
+        return {{#additionalPropertiesType}}'{{additionalPropertiesType}}'{{/additionalPropertiesType}}{{^additionalPropertiesType}}null{{/additionalPropertiesType}};
     }
 
     public function additionalPropertiesSetter($key, $value) {
