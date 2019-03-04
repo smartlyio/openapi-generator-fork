@@ -152,6 +152,10 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
         return $this->container;
     }
 
+    public static function fromArray(array $data): {{classname}} {
+        return ObjectSerializer::deserialize($data, '\\' . {{classname}}::class);
+    }
+
     /**
      * Constructor
      *
