@@ -312,11 +312,11 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
     }
 
     public static function errorsAs(string $dataType, $data): array {
-        if (self::oneOfTypes($dataType)) {
-            return self::errorsOneOf(self::oneOfTypes($dataType), $data);
-        }
         if (self::arrayType($dataType)) {
             return self::errorsArray(self::arrayType($dataType), $data);
+        }
+        if (self::oneOfTypes($dataType)) {
+            return self::errorsOneOf(self::oneOfTypes($dataType), $data);
         }
         if (self::modelInterfaceType($dataType)) {
             return self::errorsModelInterface(self::modelInterfaceType($dataType), $data);
