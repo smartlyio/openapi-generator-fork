@@ -218,6 +218,10 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
         return $invalidProperties;
     }
 
+    public static function mapType(string $type): bool {
+        return substr($type, 0, strlen('map[')) === 'map[';
+    }
+
     public static function oneOfTypes(string $type): array {
         if (substr($type, 0, strlen('oneOf[')) === 'oneOf[') {
             $inner = substr($type, strlen('oneOf['), -1);
@@ -231,6 +235,13 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
            return substr($type, 0, -2);
         }
         return null;
+    }
+
+    private static function errorsMap($data): array {
+        if (!is_array($data)) {
+            return ['value is not an array'];
+        }
+        return [];
     }
 
     private static function errorsOneOf(array $options, $data): array {
@@ -314,6 +325,9 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
     public static function errorsAs(string $dataType, $data): array {
         if (self::arrayType($dataType)) {
             return self::errorsArray(self::arrayType($dataType), $data);
+        }
+        if (self::mapType($dataType)) {
+            return self::errorsMap($data);
         }
         if (self::oneOfTypes($dataType)) {
             return self::errorsOneOf(self::oneOfTypes($dataType), $data);
