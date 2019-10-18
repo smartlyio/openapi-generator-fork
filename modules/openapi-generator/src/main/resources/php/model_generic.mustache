@@ -239,7 +239,7 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
 
     private static function errorsMap($data): array {
         if (!is_array($data)) {
-            return ['value is not an array'];
+            return [new ValidationError('value is not an array')];
         }
         return [];
     }
@@ -266,7 +266,7 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
 
     private static function errorsArray(string $type, $data): array {
         if (!is_array($data)) {
-            return ['value is not an array'];
+            return [new ValidationError('value is not an array')];
         }
         $errors = [];
         foreach($data as $ix => $element) {
