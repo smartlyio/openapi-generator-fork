@@ -356,14 +356,14 @@ public abstract class AbstractPhpCodegen extends DefaultCodegen implements Codeg
                 LOGGER.warn(ap.getName() + "(array property) does not have a proper inner type defined.Default to string");
                 inner = new StringSchema().description("TODO default missing array inner type to string");
             }
-            return getTypeDeclaration(inner) + "[]";
+            return "array<int," + getTypeDeclaration(inner) + ">";
         } else if (ModelUtils.isMapSchema(p)) {
             Schema inner = ModelUtils.getAdditionalProperties(p);
             if (inner == null) {
                 LOGGER.warn(p.getName() + "(map property) does not have a proper inner type defined. Default to string");
                 inner = new StringSchema().description("TODO default missing map inner type to string");
             }
-            return getSchemaType(p) + "[string," + getTypeDeclaration(inner) + "]";
+            return "array<string," + getTypeDeclaration(inner) + ">";
         } else if (StringUtils.isNotBlank(p.get$ref())) { // model
             String type = super.getTypeDeclaration(p);
             return (!languageSpecificPrimitives.contains(type))
@@ -373,7 +373,7 @@ public abstract class AbstractPhpCodegen extends DefaultCodegen implements Codeg
             for (Schema one: ((ComposedSchema) p).getOneOf()) {
                 inners.add(getTypeDeclaration(one));
             }
-            return "oneOf[" + String.join(", ", inners) + "]";
+            return String.join("|", inners);
         }
         return super.getTypeDeclaration(p);
     }
