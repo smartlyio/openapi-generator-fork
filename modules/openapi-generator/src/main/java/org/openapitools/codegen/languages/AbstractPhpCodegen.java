@@ -365,6 +365,13 @@ public abstract class AbstractPhpCodegen extends DefaultCodegen implements Codeg
             }
             return "array<string," + getTypeDeclaration(inner) + ">";
         } else if (StringUtils.isNotBlank(p.get$ref())) { // model
+            Schema ref = ModelUtils.unaliasSchema(this.openAPI, p);
+
+            // The reference points to something that is not a model
+            if (ref != p) {
+                return getTypeDeclaration(ref);
+            }
+
             String type = super.getTypeDeclaration(p);
             return (!languageSpecificPrimitives.contains(type))
                     ? "\\" + modelPackage + "\\" + type : type;
