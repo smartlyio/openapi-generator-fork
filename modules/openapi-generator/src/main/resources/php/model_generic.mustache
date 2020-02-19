@@ -218,8 +218,11 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
         return $invalidProperties;
     }
 
-    public static function mapType(string $type): bool {
-        return substr($type, 0, strlen('array<string,')) === 'array<string,';
+    public static function mapType(string $type): ?string {
+        if (substr($type, 0, strlen('array<string,')) === 'array<string,') {
+            return substr($type, strlen('array<string,'), -1);
+        }
+        return null;
     }
 
     public static function oneOfTypes(string $type): array {
@@ -234,13 +237,6 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
             return substr($type, strlen('array<int,'), -1);
         }
         return null;
-    }
-
-    private static function errorsMap($data): array {
-        if (!is_array($data)) {
-            return [new ValidationError('value is not an array')];
-        }
-        return [];
     }
 
     private static function errorsOneOf(array $options, $data): array {
@@ -323,13 +319,13 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
 
     public static function errorsAs(string $dataType, $data): array {
         if (self::oneOfTypes($dataType)) {
-          return self::errorsOneOf(self::oneOfTypes($dataType), $data);
+            return self::errorsOneOf(self::oneOfTypes($dataType), $data);
         }
         if (self::arrayType($dataType)) {
             return self::errorsArray(self::arrayType($dataType), $data);
         }
         if (self::mapType($dataType)) {
-            return self::errorsMap($data);
+            return self::errorsArray(self::mapType($dataType), $data);
         }
         if (self::modelInterfaceType($dataType)) {
             return self::errorsModelInterface(self::modelInterfaceType($dataType), $data);

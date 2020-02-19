@@ -251,8 +251,15 @@ class ObjectSerializer
           return $deserialized[0]['value'];
         } elseif (substr($class, 0, strlen('array<string,')) === 'array<string,') { // for associative array e.g. map[string,int]
             $data = is_string($data) ? json_decode($data) : $data;
-            settype($data, 'array');
-            return $data;
+            $subClass = substr($class, strlen('array<string,'), -1);
+            $values = [];
+            if (!is_object($data) && !is_array($data)) {
+                throw new \InvalidArgumentException('expected map');
+            }
+            foreach ($data as $key => $value) {
+                $values[$key] = self::deserialize($value, $subClass, null);
+            }
+            return $values;
         } elseif (substr($class, 0, strlen('array<int,')) === 'array<int,') {
             $data = is_string($data) ? json_decode($data) : $data;
             $subClass = substr($class, strlen('array<int,'), -1);
