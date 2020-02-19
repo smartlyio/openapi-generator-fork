@@ -239,6 +239,18 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
         return null;
     }
 
+    private static function errorsMap(string $type, $data): array {
+        if (!is_array($data)) {
+            return [new ValidationError('value is not an array')];
+        }
+        $errors = [];
+        foreach($data as $ix => $element) {
+            $element_errors = array_map(function($e) use ($ix) { return $e->path($ix); }, self::errorsAs($type, $element));
+            $errors = array_merge($errors, $element_errors);
+        }
+        return $errors;
+    }
+
     private static function errorsOneOf(array $options, $data): array {
         $errors = [];
         $matches = [];
@@ -262,6 +274,9 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
     private static function errorsArray(string $type, $data): array {
         if (!is_array($data)) {
             return [new ValidationError('value is not an array')];
+        }
+        if ($data !== [] && \array_keys($data) !== \range(0, \count($data) - 1)) {
+            return [new ValidationError('value is not an indexed array')];
         }
         $errors = [];
         foreach($data as $ix => $element) {
@@ -325,7 +340,7 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
             return self::errorsArray(self::arrayType($dataType), $data);
         }
         if (self::mapType($dataType)) {
-            return self::errorsArray(self::mapType($dataType), $data);
+            return self::errorsMap(self::mapType($dataType), $data);
         }
         if (self::modelInterfaceType($dataType)) {
             return self::errorsModelInterface(self::modelInterfaceType($dataType), $data);
