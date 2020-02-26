@@ -194,7 +194,7 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
     }
 
     public static function oneOf() {
-        return [{{#oneOfTypes}}'{{.}}'{{^-last}}, {{/-last}}{{/oneOfTypes}}];
+        return [{{#oneOfTypes}}'{{{.}}}'{{^-last}}, {{/-last}}{{/oneOfTypes}}];
     }
 
     /**
@@ -218,30 +218,37 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
         return $invalidProperties;
     }
 
-    public static function mapType(string $type): bool {
-        return substr($type, 0, strlen('map[')) === 'map[';
+    public static function mapType(string $type): ?string {
+        if (substr($type, 0, strlen('array<string,')) === 'array<string,') {
+            return substr($type, strlen('array<string,'), -1);
+        }
+        return null;
     }
 
     public static function oneOfTypes(string $type): array {
-        if (substr($type, 0, strlen('oneOf[')) === 'oneOf[') {
-            $inner = substr($type, strlen('oneOf['), -1);
-            return array_map('trim', explode(',', $inner));
+        if (preg_match_all('/\G((?:[^|<>]++|<(?1)(?:\|(?1))*>)++)(?:$|\|)/', $type, $matches) > 1) {
+            return $matches[1];
         }
         return [];
     }
 
     private static function arrayType(string $type): ?string {
-        if (substr($type, -2) === '[]') {
-           return substr($type, 0, -2);
+        if (substr($type, 0, strlen('array<int,')) === 'array<int,') {
+            return substr($type, strlen('array<int,'), -1);
         }
         return null;
     }
 
-    private static function errorsMap($data): array {
+    private static function errorsMap(string $type, $data): array {
         if (!is_array($data)) {
             return [new ValidationError('value is not an array')];
         }
-        return [];
+        $errors = [];
+        foreach($data as $ix => $element) {
+            $element_errors = array_map(function($e) use ($ix) { return $e->path($ix); }, self::errorsAs($type, $element));
+            $errors = array_merge($errors, $element_errors);
+        }
+        return $errors;
     }
 
     private static function errorsOneOf(array $options, $data): array {
@@ -267,6 +274,9 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
     private static function errorsArray(string $type, $data): array {
         if (!is_array($data)) {
             return [new ValidationError('value is not an array')];
+        }
+        if ($data !== [] && \array_keys($data) !== \range(0, \count($data) - 1)) {
+            return [new ValidationError('value is not an indexed array')];
         }
         $errors = [];
         foreach($data as $ix => $element) {
@@ -323,14 +333,14 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
     }
 
     public static function errorsAs(string $dataType, $data): array {
+        if (self::oneOfTypes($dataType)) {
+            return self::errorsOneOf(self::oneOfTypes($dataType), $data);
+        }
         if (self::arrayType($dataType)) {
             return self::errorsArray(self::arrayType($dataType), $data);
         }
         if (self::mapType($dataType)) {
-            return self::errorsMap($data);
-        }
-        if (self::oneOfTypes($dataType)) {
-            return self::errorsOneOf(self::oneOfTypes($dataType), $data);
+            return self::errorsMap(self::mapType($dataType), $data);
         }
         if (self::modelInterfaceType($dataType)) {
             return self::errorsModelInterface(self::modelInterfaceType($dataType), $data);
@@ -340,7 +350,7 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
 
     public static function dataType(): string {
         if (count(self::oneOf()) > 0) {
-            return 'oneOf[' . implode(', ', self::oneOf()) . ']';
+            return implode('|', self::oneOf());
         }
         return '\\' . get_class();
     }
@@ -372,7 +382,7 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
     /**
      * Gets {{name}}
      *
-     * @return {{dataType}}{{^required}}|null{{/required}}
+     * @return {{{dataType}}}{{^required}}|null{{/required}}
      */
     public function {{getter}}()
     {
@@ -382,7 +392,7 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
     /**
      * Sets {{name}}
      *
-     * @param {{dataType}}{{^required}}|null{{/required}} ${{name}}{{#description}} {{{description}}}{{/description}}{{^description}} {{{name}}}{{/description}}
+     * @param {{{dataType}}}{{^required}}|null{{/required}} ${{name}}{{#description}} {{{description}}}{{/description}}{{^description}} {{{name}}}{{/description}}
      *
      * @return $this
      */
@@ -422,7 +432,7 @@ class {{classname}} {{#parentSchema}}extends {{{parent}}} {{/parentSchema}}{{^pa
         }
         {{/required}}
         if (${{name}} !== null) {
-            $errors = self::errorsAs('{{dataType}}', ${{name}});
+            $errors = self::errorsAs('{{{dataType}}}', ${{name}});
             if (count($errors) > 0) {
                 return  $errors;
             }
