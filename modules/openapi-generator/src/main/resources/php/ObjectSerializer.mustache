@@ -56,11 +56,11 @@ class ObjectSerializer
             if ($data instanceof ModelInterface) {
                 $formats = $data::openAPIFormats();
                 foreach ($data->values() as $property => $value) {
-                    $getter = $data::getters()[$property];
+                    $getter = $data::getters()[$property] ?? null;
                     if ($getter) {
                         $value = $data->$getter();
                     }
-                    $openAPIType = $data::openAPITypes()[$property]?: null;
+                    $openAPIType = ($data::openAPITypes()[$property] ?? null) ?: null;
                     if ($value !== null
                         && !in_array($openAPIType, [{{&primitives}}], true)
                         && method_exists($openAPIType, 'getAllowableEnumValues')
@@ -68,8 +68,8 @@ class ObjectSerializer
                         $imploded = implode("', '", $openAPIType::getAllowableEnumValues());
                         throw new \InvalidArgumentException("Invalid value for enum '$openAPIType', must be one of: '$imploded'");
                     }
-                    $outField = $data::attributeMap()[$property] ?: $property;
-                    $values[$outField] = self::sanitizeForSerialization($value, $openAPIType, $formats[$property]);
+                    $outField = ($data::attributeMap()[$property] ?? null) ?: $property;
+                    $values[$outField] = self::sanitizeForSerialization($value, $openAPIType, $formats[$property] ?? null);
                 }
             } else {
                 foreach($data as $property => $value) {
@@ -331,6 +331,7 @@ class ObjectSerializer
                     $class = $subclass;
                 }
             }
+            /** @var ModelInterface $instance */
             $instance = new $class();
             if (!empty($instance::oneOf())) {
                 return self::deserialize($original_data, implode('|', $instance->oneOf()), $httpHeaders);
@@ -341,8 +342,8 @@ class ObjectSerializer
                 return null;
             }
             foreach(get_object_vars($data) as $key => $propertyValue) {
-              $modelField = $reverseAttributes[$key];
-              $propertySetter = $instance::setters()[$modelField];
+              $modelField = $reverseAttributes[$key] ?? null;
+              $propertySetter = $modelField !== null ? ($instance::setters()[$modelField] ?? null) : null;
               if (isset($propertySetter)) {
                 $type = $instance::openAPITypes()[$modelField];
                 $instance->$propertySetter(self::deserialize($propertyValue, $type, $httpHeaders));
