@@ -267,6 +267,9 @@ class ObjectSerializer
             if (!is_array($data)) {
                 throw new \InvalidArgumentException('expected array');
             }
+            if($data !== array_values($data)) {
+                throw new \InvalidArgumentException('expected sequential array');
+            }
             foreach ($data as $key => $value) {
                 $values[] = self::deserialize($value, $subClass, null);
             }
