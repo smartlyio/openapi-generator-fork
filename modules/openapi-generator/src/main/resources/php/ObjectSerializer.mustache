@@ -68,6 +68,10 @@ class ObjectSerializer
                         $imploded = implode("', '", $openAPIType::getAllowableEnumValues());
                         throw new \InvalidArgumentException("Invalid value for enum '$openAPIType', must be one of: '$imploded'");
                     }
+                    // sometimes when we get "{}" PHP encodes it as "[]" which brakes OpenAPI types
+                    if ($openAPIType === 'object' && \count($value) === 0) {
+                      $value = new \stdClass();
+                    }
                     $outField = ($data::attributeMap()[$property] ?? null) ?: $property;
                     $values[$outField] = self::sanitizeForSerialization($value, $openAPIType, $formats[$property] ?? null);
                 }
