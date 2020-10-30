@@ -297,12 +297,12 @@ class ObjectSerializer
                 return null;
             }
         } elseif (in_array($class, [{{&primitives}}], true)) {
-            if ((is_array($data) || is_object($data)) && $class !== 'object') {
+            if (is_array($data) && $class !== 'object') {
                 throw new \InvalidArgumentException('invalid cast of array value to ' . $class);
             }
             try {
                 settype($data, $class);
-            } catch (\ErrorException $e) {
+            } catch (\Error $e) {
                 throw new \InvalidArgumentException('invalid cast: ' . $e->getMessage());
             }
             return $data;
