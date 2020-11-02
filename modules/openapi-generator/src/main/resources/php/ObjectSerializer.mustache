@@ -238,6 +238,9 @@ class ObjectSerializer
           $deserialized = [];
           $errors = [];
           foreach ($options as $option) {
+            if ($option !== 'string' && in_array('string', $options) && is_string($data)) {
+                continue;
+            }
             try {
               $deserialized[] = ['option' => $option, 'value' => self::deserialize($data, $option, $httpHeaders)];
             } catch (\InvalidArgumentException $e) {
@@ -299,7 +302,7 @@ class ObjectSerializer
             }
             try {
                 settype($data, $class);
-            } catch (\ErrorException $e) {
+            } catch (\Error $e) {
                 throw new \InvalidArgumentException('invalid cast: ' . $e->getMessage());
             }
             return $data;
