@@ -62,7 +62,7 @@ class ObjectSerializer
                     }
                     $openAPIType = ($data::openAPITypes()[$property] ?? null) ?: null;
                     if ($value !== null
-                        && !in_array($openAPIType, [{{&primitives}}], true)
+                        && !in_array($openAPIType, [{{&primitives}}, null], true)
                         && method_exists($openAPIType, 'getAllowableEnumValues')
                         && !in_array($value, $openAPIType::getAllowableEnumValues(), true)) {
                         $imploded = implode("', '", $openAPIType::getAllowableEnumValues());
